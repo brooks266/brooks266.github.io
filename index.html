@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xposure</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#007cba">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="msapplication-TileImage" content="./icons/icon-192.png">
+    <meta name="google-adsense-account" content="ca-pub-4923804767674808">
+
+    <!-- Preconnect to external domains for faster loading -->
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://tile.openstreetmap.org">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+
+    <!-- Preload critical resources -->
+    <link rel="preload" href="./css/common.css" as="style">
+    <link rel="preload" href="./css/leaflet.css" as="style">
+    <link rel="preload" href="./js/leaflet.js" as="script">
+
+    <link rel="stylesheet" href="./css/common.css">
+    <link rel="stylesheet" href="./css/leaflet.css">
+    <link rel="stylesheet" href="./css/MarkerCluster.css">
+    <link rel="stylesheet" href="./css/MarkerCluster.Default.css">
+
+    <script src="./js/leaflet.js" defer></script>
+    <script src="./js/leaflet.markercluster.js" defer></script>
+    
+    <style>
+        /* Page-specific styles only */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        #map {
+            height: 100vh;
+            width: 100vw;
+            border: none;
+            position: relative;
+            z-index: 1;
+        }
+        
+        #search-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 15px;
+            border-radius: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 300px;
+        }
+        
+        #search {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            box-sizing: border-box;
+            min-width: 200px;
+        }
+        
+        #search:focus {
+            outline: none;
+            border-color: #007cba;
+            box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.2);
+        }
+        
+        #add-btn {
+            width: 40px;
+            height: 40px;
+            background: #ccc;
+            color: #333;
+            border: none;
+            border-radius: 50%;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        
+        #add-btn.active {
+            background: #28a745;
+            color: white;
+        }
+        
+        #settings-btn {
+            padding: 10px 15px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        #settings-btn:hover {
+            background: #5a6268;
+        }
+        
+        @media (max-width: 480px) {
+            #search-container {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                min-width: 260px;
+                padding: 15px;
+                bottom: 10px;
+            }
+
+            #stacker {
+                display: flex;
+                flex-direction: row;
+                gap: 10px;
+            }
+            
+            #search {
+                min-width: auto;
+            }
+            
+            #add-btn, #settings-btn {
+                border-radius: 20px;
+                text-align: center;
+            }
+        }
+        
+        /* Modal-specific overrides */
+        .modal h3 { 
+            margin-top: 0; 
+        }
+        
+        .modal button { 
+            margin: 5px; 
+        }
+        
+        #offline-message { 
+            display: none; 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            background: #ff9800; 
+            color: white; 
+            padding: 10px; 
+            border-radius: 4px; 
+            z-index: 1001; 
+            font-size: 14px; 
+        }
+
+        .popup-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .popup-actions button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .popup-edit {
+            background: #007cba;
+            color: white;
+        }
+
+        .popup-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        /* Image upload styles */
+        .image-upload-section {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .image-upload-section label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .image-upload-section input[type="file"] {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: white;
+        }
+
+        .image-preview {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .image-preview .remove-preview {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 5px 10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .current-image {
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .current-image img {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .current-image .no-image {
+            color: #999;
+            font-style: italic;
+            padding: 10px;
+        }
+
+        .popup-image {
+            width: 100%;
+            max-width: 200px;
+            height: auto;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="search-container">
+        <input type="text" id="search" placeholder="Search by title, notes, address, or user..." />
+        <div id="stacker">
+            <button id="add-btn" title="Add New Location">+</button>
+            <button id="settings-btn">Settings</button>
+        </div>
+    </div>
+    
+    <div id="map"></div>
+
+    <div id="offline-message">Offline Mode: Some features limited.</div>
+
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Message element for error/success notifications -->
+    <div id="message" class="message"></div>
+
+    <!-- Creation Modal -->
+    <div id="creation-modal" class="modal">
+        <div class="modal-content">
+            <h3>Add New Location</h3>
+            <p>Clicked at: <span id="click-coords"></span></p>
+            <input type="text" id="new-title" placeholder="Title (required)" />
+            <input type="text" id="new-user" placeholder="User (auto-filled)" readonly />
+            <textarea id="new-notes" placeholder="Notes (optional)"></textarea>
+            <input type="text" id="new-address" placeholder="Address (optional, for search/display)" />
+            
+            <div class="image-upload-section">
+                <label for="new-image">Location Image (optional)</label>
+                <input type="file" id="new-image" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" />
+                <small style="color: #666; display: block; margin-top: 5px;">Max size: 5MB. Formats: JPG, PNG, GIF, WebP</small>
+                <div id="new-image-preview" class="image-preview"></div>
+            </div>
+            
+            <button class="btn-primary" id="submit-location-btn">Add Location</button>
+            <button class="btn-secondary" id="cancel-location-btn">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <h3>Edit Location</h3>
+            <input type="text" id="edit-title" placeholder="Title (required)" />
+            <textarea id="edit-notes" placeholder="Notes (optional)"></textarea>
+            <input type="text" id="edit-address" placeholder="Address (optional)" />
+            
+            <div class="image-upload-section">
+                <label>Location Image</label>
+                <div id="edit-current-image" class="current-image"></div>
+                <input type="file" id="edit-image" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" />
+                <small style="color: #666; display: block; margin-top: 5px;">Upload new image to replace current one. Max size: 5MB</small>
+                <div id="edit-image-preview" class="image-preview"></div>
+                <button type="button" class="btn-secondary" id="remove-image-btn" style="display: none; margin-top: 10px;">Remove Image</button>
+            </div>
+            
+            <button class="btn-primary" id="update-location-btn">Update Location</button>
+            <button class="btn-danger" id="delete-location-btn">Delete Location</button>
+            <button class="btn-secondary" id="cancel-edit-btn">Cancel</button>
+        </div>
+    </div>
+
+    <script type="module" src="./js/index.js"></script>
+</body>
+</html>
+

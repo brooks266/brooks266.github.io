@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Details</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#007cba">
+    <link rel="stylesheet" href="./css/common.css">
+    <meta name="google-adsense-account" content="ca-pub-4923804767674808">
+    <style>
+        /* Page-specific styles only */
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        .detail {
+            margin-bottom: 15px;
+        }
+
+        .detail strong {
+            color: #007cba;
+        }
+
+        .back-link, .streetview-link {
+            display: inline-block;
+            margin: 10px 5px;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .back-link {
+            background: #007cba;
+            color: white;
+        }
+
+        .back-link:hover {
+            background: #005a87;
+        }
+
+        .streetview-link {
+            background: #4285f4;
+            color: white;
+        }
+
+        .streetview-link:hover {
+            background: #3367d6;
+        }
+
+        .error {
+            color: #d00;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .location-image {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        .location-image img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .location-image .no-image {
+            color: #999;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .detail a {
+            color: #007cba;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .detail a:hover {
+            text-decoration: underline;
+            color: #005a87;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="./index.html" class="back-link">← Back to Map</a>
+
+        <div id="details"></div>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <script type="module">
+        import { auth, db, onAuthStateChanged, doc, getDoc } from './js/firebase-config.js';
+        import { showLoading, showError } from './js/utils.js';
+
+        // Check authentication
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = './login.html';
+                return;
+            }
+
+            // Parse URL query param for location ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const locationId = urlParams.get('id');
+
+            if (locationId) {
+                await loadLocationDetails(locationId);
+            } else {
+                showError('No location ID provided.');
+            }
+        });
+
+        async function loadLocationDetails(locationId) {
+            showLoading(true);
+            try {
+                const locationDoc = await getDoc(doc(db, 'locations', locationId));
+
+                if (locationDoc.exists()) {
+                    const data = locationDoc.data();
+
+                    // Get username from user profile
+                    let username = 'Unknown User';
+                    if (data.userId) {
+                        try {
+                            const userDoc = await getDoc(doc(db, 'users', data.userId));
+                            if (userDoc.exists()) {
+                                username = userDoc.data().displayName || userDoc.data().email || 'Unknown User';
+                            }
+                        } catch (error) {
+                            console.error('Error loading user:', error);
+                        }
+                    }
+
+                    // Build HTML for details
+                    let html = `<h1>${data.title}</h1>`;
+
+                    // Display image if exists
+                    if (data.imageUrl) {
+                        html += `<div class="location-image">
+                            <img src="${data.imageUrl}" alt="${data.title}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'>Image failed to load</div>'">
+                        </div>`;
+                    }
+
+                    html += `<div class="detail"><strong>Latitude:</strong> ${data.latitude}</div>`;
+                    html += `<div class="detail"><strong>Longitude:</strong> ${data.longitude}</div>`;
+
+                    if (data.address) {
+                        html += `<div class="detail"><strong>Address:</strong><br>${data.address}</div>`;
+                    }
+
+                    html += `<div class="detail"><strong>User:</strong> <a href="settings.html?userId=${data.userId}">${username}</a></div>`;
+
+                    if (data.notes) {
+                        html += `<div class="detail"><strong>Notes:</strong><br>${data.notes}</div>`;
+                    }
+
+                    // Add Google Street View link
+                    const streetViewUrl = `http://maps.google.com/maps?q=&layer=c&cbll=${data.latitude},${data.longitude}`;
+                    html += `<a href="${streetViewUrl}" target="_blank" class="streetview-link">View in Google Street View</a>`;
+
+                    document.getElementById('details').innerHTML = html;
+                } else {
+                    showError('Location not found.');
+                }
+            } catch (error) {
+                console.error('Error loading location details:', error);
+                showError('Failed to load location details.');
+            } finally {
+                showLoading(false);
+            }
+        }
+    </script>
+</body>
+</html>
+
