@@ -23,26 +23,26 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedEditImage = null;
     let currentLocationImageUrl = null;
 
-    // Session Check: Redirect to login if not authenticated
+    // Session Check: Allow both authenticated and anonymous access
     onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-            window.location.href = './login.html';
-            return;
-        }
-
         currentUser = user;
 
-        // Load user profile from Firestore
-        try {
-            const userDoc = await getDoc(doc(db, 'users', user.uid));
-            if (userDoc.exists()) {
-                currentUserData = userDoc.data();
+        if (user) {
+            // Load user profile from Firestore for authenticated users
+            try {
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
+                if (userDoc.exists()) {
+                    currentUserData = userDoc.data();
+                }
+            } catch (error) {
+                console.error('Error loading user profile:', error);
             }
-        } catch (error) {
-            console.error('Error loading user profile:', error);
+        } else {
+            // Anonymous user - no profile data
+            currentUserData = null;
         }
 
-        // Initialize map after authentication
+        // Initialize map for all users (authenticated or anonymous)
         initializeMap();
     });
 
@@ -280,14 +280,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Add View Details link
-        popupContent += `<br><br><a href="./location.html?id=${locationId}" style="background: #007cba; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px; display: inline-block;">View Details</a>`;
+        popupContent += `<br><br><a href="./location.html?id=${locationId}" class="btn btn-primary btn-popup" style="color:white;">View Details</a>`;
 
         // Add Edit/Delete buttons if user owns this location
         if (currentUser && userId === currentUser.uid) {
             popupContent += `
                 <div class="popup-actions">
-                    <button class="popup-edit" onclick="window.editLocation('${locationId}')">Edit</button>
-                    <button class="popup-delete" onclick="window.confirmDeleteLocation('${locationId}')">Delete</button>
+                    <button class="btn btn-primary btn-popup" onclick="window.editLocation('${locationId}')">Edit</button>
+                    <button class="btn btn-danger btn-popup" onclick="window.confirmDeleteLocation('${locationId}')">Delete</button>
                 </div>
             `;
         }
@@ -491,7 +491,7 @@ document.addEventListener('DOMContentLoaded', function() {
         reader.onload = function(e) {
             document.getElementById('new-image-preview').innerHTML = `
                 <img src="${e.target.result}" alt="Preview">
-                <button type="button" class="remove-preview" onclick="document.getElementById('new-image').value=''; document.getElementById('new-image-preview').innerHTML=''; selectedNewImage=null;">Remove</button>
+                <button type="button" class="btn btn-danger" onclick="document.getElementById('new-image').value=''; document.getElementById('new-image-preview').innerHTML=''; selectedNewImage=null;">Remove</button>
             `;
         };
         reader.readAsDataURL(file);
@@ -519,7 +519,7 @@ document.addEventListener('DOMContentLoaded', function() {
         reader.onload = function(e) {
             document.getElementById('edit-image-preview').innerHTML = `
                 <img src="${e.target.result}" alt="Preview">
-                <button type="button" class="remove-preview" onclick="document.getElementById('edit-image').value=''; document.getElementById('edit-image-preview').innerHTML=''; selectedEditImage=null;">Remove</button>
+                <button type="button" class="btn btn-danger" onclick="document.getElementById('edit-image').value=''; document.getElementById('edit-image-preview').innerHTML=''; selectedEditImage=null;">Remove</button>
             `;
         };
         reader.readAsDataURL(file);
@@ -641,6 +641,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Toggle creation mode
     function toggleCreationMode() {
+        // Check if user is authenticated
+        if (!currentUser) {
+            showError('Please login to add locations.');
+            // Redirect to login page
+            window.location.href = './login.html';
+            return;
+        }
+
         creationMode = !creationMode;
         const addBtn = document.getElementById('add-btn');
         addBtn.classList.toggle('active', creationMode);
@@ -782,3 +790,8 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedNewImage = null;
     }
 });
+
+
+
+
+

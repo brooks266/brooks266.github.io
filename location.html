@@ -9,88 +9,20 @@
     <link rel="stylesheet" href="./css/common.css">
     <meta name="google-adsense-account" content="ca-pub-4923804767674808">
     <style>
-        /* Page-specific styles only */
         h1 {
-            color: #333;
+            color: var(--text-primary);
             text-align: center;
         }
 
-        .detail {
-            margin-bottom: 15px;
-        }
-
-        .detail strong {
-            color: #007cba;
-        }
-
-        .back-link, .streetview-link {
+        .btn-location {
             display: inline-block;
             margin: 10px 5px;
-            padding: 10px 15px;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .back-link {
-            background: #007cba;
-            color: white;
-        }
-
-        .back-link:hover {
-            background: #005a87;
-        }
-
-        .streetview-link {
-            background: #4285f4;
-            color: white;
-        }
-
-        .streetview-link:hover {
-            background: #3367d6;
-        }
-
-        .error {
-            color: #d00;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .location-image {
-            width: 100%;
-            max-width: 600px;
-            margin: 20px auto;
-            text-align: center;
-        }
-
-        .location-image img {
-            width: 100%;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        .location-image .no-image {
-            color: #999;
-            font-style: italic;
-            padding: 20px;
-        }
-
-        .detail a {
-            color: #007cba;
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }
-
-        .detail a:hover {
-            text-decoration: underline;
-            color: #005a87;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="./index.html" class="back-link">← Back to Map</a>
+        <a href="./index.html" class="btn btn-primary btn-location">← Back to Map</a>
 
         <div id="details"></div>
     </div>
@@ -105,13 +37,8 @@
         import { auth, db, onAuthStateChanged, doc, getDoc } from './js/firebase-config.js';
         import { showLoading, showError } from './js/utils.js';
 
-        // Check authentication
+        // Check authentication (allow both authenticated and anonymous access)
         onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                window.location.href = './login.html';
-                return;
-            }
-
             // Parse URL query param for location ID
             const urlParams = new URLSearchParams(window.location.search);
             const locationId = urlParams.get('id');
@@ -169,7 +96,11 @@
 
                     // Add Google Street View link
                     const streetViewUrl = `http://maps.google.com/maps?q=&layer=c&cbll=${data.latitude},${data.longitude}`;
-                    html += `<a href="${streetViewUrl}" target="_blank" class="streetview-link">View in Google Street View</a>`;
+                    html += `<a href="${streetViewUrl}" target="_blank" class="btn btn-primary btn-location">View in Google Street View</a>`;
+
+                    // Add Navigate button - works across all platforms (mobile/desktop, iOS/Android)
+                    const navigateUrl = `https://www.google.com/maps/dir/?api=1&destination=${data.latitude},${data.longitude}`;
+                    html += `<a href="${navigateUrl}" target="_blank" class="btn btn-secondary btn-location">Navigate to Location</a>`;
 
                     document.getElementById('details').innerHTML = html;
                 } else {
@@ -185,4 +116,9 @@
     </script>
 </body>
 </html>
+
+
+
+
+
 

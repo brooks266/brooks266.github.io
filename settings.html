@@ -16,296 +16,15 @@
             flex-direction: column;
         }
         
-        .back-btn {
-            background: #007cba;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            text-decoration: none;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
-        
-        .back-btn:hover {
-            background: #005a87;
-        }
-        
-        .profile-card {
-            background: white; 
-            padding: 30px; 
-            border-radius: 8px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        
-        .profile-header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-        
-        .profile-picture-container {
-            position: relative;
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 15px;
-        }
-        
-        .profile-icon {
-            width: 120px;
-            height: 120px;
-            background: #007cba;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            font-weight: bold;
-            overflow: hidden;
-            border: 4px solid #f0f0f0;
-        }
-        
-        .profile-icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .change-picture-btn {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            background: #007cba;
-            color: white;
-            border: 2px solid white;
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 18px;
-            transition: background 0.3s;
-        }
-        
-        .change-picture-btn:hover {
-            background: #005a87;
-        }
-        
-        .picture-upload-section {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        
-        .picture-upload-section.active {
-            display: block;
-        }
-        
-        .picture-preview {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin: 10px auto;
-            display: none;
-            border: 3px solid #007cba;
-        }
-        
-        .picture-preview.active {
-            display: block;
-        }
-        
-        .file-input-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-            margin: 10px 0;
-        }
-        
-        .file-input-wrapper input[type=file] {
-            position: absolute;
-            left: -9999px;
-        }
-        
-        .file-input-label {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #007cba;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s;
-        }
-        
-        .file-input-label:hover {
-            background: #005a87;
-        }
-        
-        .upload-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .upload-actions button {
-            flex: 1;
-            padding: 8px 15px;
-            font-size: 14px;
-        }
-        
-        .email-verification-warning {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            color: #856404;
-            padding: 12px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-        
-        .username-display {
-            font-size: 24px;
-            color: #333;
-            font-weight: bold;
-            margin: 0;
-        }
-
-        .email-display {
-            font-size: 14px;
-            color: #666;
-            margin: 5px 0 0 0;
-        }
-
-        .email-verified {
-            display: inline-block;
-            background: #28a745;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 12px;
-            margin-left: 5px;
-        }
-
-        .email-unverified {
-            display: inline-block;
-            background: #ffc107;
-            color: #333;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 12px;
-            margin-left: 5px;
-        }
-        
-        .btn-container {
-            display: flex;
-            gap: 10px;
-            margin-top: 25px;
-        }
-        
-        .btn-container .btn {
-            flex: 1;
-        }
-        
-        .logout-section {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        .logout-section p {
-            color: #666;
-            margin-bottom: 15px;
-        }
-        
         .btn-logout {
             padding: 12px 30px;
-        }
-
-        .stats-section {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .stats-section h3 {
-            margin-top: 0;
-            color: #333;
-        }
-
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .stat-item:last-child {
-            border-bottom: none;
-        }
-
-        .stat-label {
-            color: #666;
-        }
-
-        .stat-value {
-            color: #007cba;
-            font-weight: bold;
-        }
-
-        /* Read-only mode styles */
-        .read-only-info {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-        }
-
-        .read-only-info .info-label {
-            font-weight: bold;
-            color: #007cba;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .read-only-info .info-value {
-            color: #333;
-            word-wrap: break-word;
-        }
-        
-        @media (max-width: 480px) {
-            .container {
-                padding: 20px 15px;
-            }
-            
-            .profile-card {
-                padding: 20px;
-            }
-            
-            .btn-container {
-                flex-direction: column;
-            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="profile-card">
-            <a href="./index.html" class="back-btn" id="back-btn">← Back to Map</a>
+            <a href="./index.html" class="btn btn-primary" id="back-btn">← Back to Map</a>
     
             <div id="message" class="message"></div>
             <div id="loading" class="loading">Loading...</div>
@@ -317,6 +36,9 @@
                 </div>
                 <h2 class="username-display" id="username-display">Loading...</h2>
                 <p class="email-display" id="email-display"></p>
+                
+                <!-- Social Media Links -->
+                <div class="social-links" id="social-links"></div>
             </div>
             
             <!-- Profile Picture Upload Section (shown only for own profile) -->
@@ -360,6 +82,33 @@
                     <textarea id="bio" placeholder="Tell us about yourself..."></textarea>
                 </div>
                 
+                <!-- Social Media Section -->
+                <div class="social-media-section">
+                    <h4>Social Media Links</h4>
+                    <p style="color: #666; font-size: 14px; margin-bottom: 15px;">Add your social media usernames (without @ symbol)</p>
+                    <div class="social-input-group">
+                        <div class="form-group">
+                            <label for="tiktok">TikTok Username</label>
+                            <input type="text" id="tiktok" placeholder="username" />
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="instagram">Instagram Username</label>
+                            <input type="text" id="instagram" placeholder="username" />
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="facebook">Facebook Username</label>
+                            <input type="text" id="facebook" placeholder="username" />
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="twitter">X/Twitter Username</label>
+                            <input type="text" id="twitter" placeholder="username" />
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="btn-container">
                     <button type="submit" class="btn btn-primary" id="save-btn">Save Changes</button>
                     <button type="button" class="btn btn-secondary" id="reset-btn">Reset</button>
@@ -394,7 +143,7 @@
         
         <div class="logout-section" id="logout-section">
             <p>Ready to leave?</p>
-            <button class="btn-logout" id="logout-btn">Logout</button>
+            <button class="btn btn-danger" id="logout-btn">Logout</button>
         </div>
     </div>
 
@@ -415,14 +164,16 @@
         const MESSAGE_TIMEOUT = 5000;
         const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
 
-        // Session Check
+        // Session Check (allow both authenticated and anonymous access)
         onAuthStateChanged(auth, async (user) => {
+            currentUser = user;
+
+            // If no user, show login prompt instead of redirecting
             if (!user) {
-                window.location.href = './login.html';
+                showAnonymousMessage();
+                showLoading(false);
                 return;
             }
-
-            currentUser = user;
             
             // Check if viewing another user's profile
             const urlParams = new URLSearchParams(window.location.search);
@@ -445,6 +196,22 @@
             // Update UI based on profile ownership
             updateUIForProfileMode();
         });
+
+        // Show message for anonymous users
+        function showAnonymousMessage() {
+            const container = document.querySelector('.container');
+            container.innerHTML = `
+                <div class="profile-card">
+                    <a href="./index.html" class="btn btn-primary" id="back-btn">← Back to Map</a>
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <h2>Profile & Settings</h2>
+                        <p style="color: #666; margin: 20px 0;">Please login to view and manage your profile.</p>
+                        <a href="./login.html" class="btn btn-primary" style="display: inline-block; margin: 10px;">Login / Sign Up</a>
+                        <a href="./index.html" class="btn btn-secondary" style="display: inline-block; margin: 10px;">Continue as Guest</a>
+                    </div>
+                </div>
+            `;
+        }
 
         // Update UI based on whether viewing own profile or another user's
         function updateUIForProfileMode() {
@@ -500,6 +267,43 @@
             }
         }
 
+        // Display social media links
+        function displaySocialMediaLinks(socialMedia) {
+            const socialLinksContainer = document.getElementById('social-links');
+            socialLinksContainer.innerHTML = '';
+            
+            if (!socialMedia) return;
+            
+            const platforms = [
+                { name: 'tiktok', iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e8/Tiktok_logo.png', url: (username) => `https://www.tiktok.com/@${username}` },
+                { name: 'instagram', iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png', url: (username) => `https://www.instagram.com/${username}` },
+                { name: 'facebook', iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg', url: (username) => `https://www.facebook.com/${username}` },
+                { name: 'twitter', iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/1/19/X_logo_twitter_new_brand_icon.svg', url: (username) => `https://twitter.com/${username}` }
+            ];
+            
+            platforms.forEach(platform => {
+                const username = socialMedia[platform.name];
+                if (username && username.trim()) {
+                    const link = document.createElement('a');
+                    link.href = platform.url(username.trim());
+                    link.className = `social-link ${platform.name}`;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.title = `${platform.name.charAt(0).toUpperCase() + platform.name.slice(1)}: @${username}`;
+                    
+                    const img = document.createElement('img');
+                    img.src = platform.iconUrl;
+                    img.alt = `${platform.name} icon`;
+                    img.style.width = '24px';
+                    img.style.height = '24px';
+                    img.style.objectFit = 'contain';
+                    
+                    link.appendChild(img);
+                    socialLinksContainer.appendChild(link);
+                }
+            });
+        }
+
         // Load user profile
         async function loadUserProfile(userId) {
             showLoading(true);
@@ -549,6 +353,13 @@
                     document.getElementById('email').value = currentUser.email || '';
                     document.getElementById('bio').value = bio;
                     
+                    // Populate social media fields
+                    const socialMedia = currentUserData.socialMedia || {};
+                    document.getElementById('tiktok').value = socialMedia.tiktok || '';
+                    document.getElementById('instagram').value = socialMedia.instagram || '';
+                    document.getElementById('facebook').value = socialMedia.facebook || '';
+                    document.getElementById('twitter').value = socialMedia.twitter || '';
+                    
                     // Email verification status
                     const emailDisplay = document.getElementById('email-display');
                     emailDisplay.innerHTML = currentUser.email || 'No email';
@@ -572,6 +383,9 @@
                 
                 // Display profile picture or initial
                 displayProfilePicture(currentUserData.photoURL);
+                
+                // Display social media links
+                displaySocialMediaLinks(currentUserData.socialMedia);
                 
                 // Format dates using utility function
                 document.getElementById('account-created').textContent = formatFirestoreDate(currentUserData.createdAt);
@@ -790,6 +604,12 @@
             const displayName = document.getElementById('displayName').value.trim();
             const bio = document.getElementById('bio').value.trim();
             
+            // Get social media usernames
+            const tiktok = document.getElementById('tiktok').value.trim();
+            const instagram = document.getElementById('instagram').value.trim();
+            const facebook = document.getElementById('facebook').value.trim();
+            const twitter = document.getElementById('twitter').value.trim();
+            
             if (!displayName) {
                 showError('Display name is required.');
                 return;
@@ -801,6 +621,12 @@
                 await setDoc(doc(db, 'users', currentUser.uid), {
                     displayName,
                     bio,
+                    socialMedia: {
+                        tiktok,
+                        instagram,
+                        facebook,
+                        twitter
+                    },
                     updatedAt: serverTimestamp()
                 }, { merge: true });
 
@@ -823,6 +649,14 @@
             if (originalData) {
                 document.getElementById('displayName').value = originalData.displayName || '';
                 document.getElementById('bio').value = originalData.bio || '';
+                
+                // Reset social media fields
+                const socialMedia = originalData.socialMedia || {};
+                document.getElementById('tiktok').value = socialMedia.tiktok || '';
+                document.getElementById('instagram').value = socialMedia.instagram || '';
+                document.getElementById('facebook').value = socialMedia.facebook || '';
+                document.getElementById('twitter').value = socialMedia.twitter || '';
+                
                 showSuccess('Form reset to saved values.');
             }
         });
@@ -844,4 +678,7 @@
     </script>
 </body>
 </html>
+
+
+
 
