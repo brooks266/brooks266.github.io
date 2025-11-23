@@ -11,7 +11,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="msapplication-TileImage" content="./icons/icon-192.png">
     <meta name="google-adsense-account" content="ca-pub-4923804767674808">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4923804767674808" crossorigin="anonymous"></script>
 
     <!-- Preconnect to external domains for faster loading -->
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -54,99 +53,67 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 100;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 10px 15px;
-            border-radius: 25px;
+            background: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             display: flex;
             align-items: center;
-            gap: 10px;
-            min-width: 300px;
+            justify-content: center;
+            gap: 12px;
+            min-width: 50vw;
+            max-width: 90vw;
         }
         
         #search {
             flex: 1;
+            min-width: 45vw;
+            border: 1px solid #ddd;
             padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 20px;
+            background: white;
+            transition: all 0.3s ease;
             box-sizing: border-box;
-            min-width: 200px;
+            margin: 0;
         }
         
         #search:focus {
             outline: none;
-            border-color: #007cba;
+            border-color: var(--primary-color);
             box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.2);
         }
         
-        #add-btn {
-            width: 40px;
-            height: 40px;
-            background: #ccc;
-            color: #333;
-            border: none;
-            border-radius: 50%;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
+        #search-container .btn {
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: fit-content;
             flex-shrink: 0;
         }
         
         #add-btn.active {
-            background: #28a745;
+            background: var(--success-color);
             color: white;
-        }
-        
-        #settings-btn {
-            padding: 10px 15px;
-            background: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 14px;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-        
-        #settings-btn:hover {
-            background: #5a6268;
         }
         
         @media (max-width: 480px) {
             #search-container {
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-                min-width: 260px;
-                padding: 15px;
+                flex-wrap: wrap;
+                gap: 12px;
+                min-width: 85vw;
+                max-width: 90vw;
                 bottom: 10px;
-            }
-
-            #stacker {
-                display: flex;
-                flex-direction: row;
-                gap: 10px;
             }
             
             #search {
-                min-width: auto;
+                width: 100%;
+                min-width: unset;
+                flex-basis: 100%;
             }
             
-            #add-btn, #settings-btn {
-                border-radius: 20px;
-                text-align: center;
+            #search-container .btn {
+                min-width: 0;
             }
-        }
-        
-        /* Modal-specific overrides */
-        .modal h3 { 
-            margin-top: 0; 
-        }
-        
-        .modal button { 
-            margin: 5px; 
         }
         
         #offline-message { 
@@ -161,114 +128,13 @@
             z-index: 1001; 
             font-size: 14px; 
         }
-
-        .popup-actions {
-            margin-top: 10px;
-            display: flex;
-            gap: 5px;
-        }
-
-        .popup-actions button {
-            padding: 5px 10px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .popup-edit {
-            background: #007cba;
-            color: white;
-        }
-
-        .popup-delete {
-            background: #dc3545;
-            color: white;
-        }
-
-        /* Image upload styles */
-        .image-upload-section {
-            margin: 15px 0;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 4px;
-        }
-
-        .image-upload-section label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #333;
-        }
-
-        .image-upload-section input[type="file"] {
-            display: block;
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            background: white;
-        }
-
-        .image-preview {
-            margin-top: 10px;
-            text-align: center;
-        }
-
-        .image-preview img {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .image-preview .remove-preview {
-            display: inline-block;
-            margin-top: 8px;
-            padding: 5px 10px;
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .current-image {
-            margin: 10px 0;
-            text-align: center;
-        }
-
-        .current-image img {
-            max-width: 100%;
-            max-height: 150px;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .current-image .no-image {
-            color: #999;
-            font-style: italic;
-            padding: 10px;
-        }
-
-        .popup-image {
-            width: 100%;
-            max-width: 200px;
-            height: auto;
-            border-radius: 4px;
-            margin: 10px 0;
-        }
     </style>
 </head>
 <body>
     <div id="search-container">
-        <input type="text" id="search" placeholder="Search by title, notes, address, or user..." />
-        <div id="stacker">
-            <button id="add-btn" title="Add New Location">+</button>
-            <button id="settings-btn">Settings</button>
-        </div>
+        <input type="text" id="search" placeholder="Search by title, notes, user, etc." />
+        <button class="btn btn-secondary" id="add-btn" title="Add New Location">+</button>
+        <button class="btn btn-primary" id="settings-btn">Settings</button>
     </div>
     
     <div id="map"></div>
@@ -299,8 +165,8 @@
                 <div id="new-image-preview" class="image-preview"></div>
             </div>
             
-            <button class="btn-primary" id="submit-location-btn">Add Location</button>
-            <button class="btn-secondary" id="cancel-location-btn">Cancel</button>
+            <button class="btn btn-primary" id="submit-location-btn">Add Location</button>
+            <button class="btn btn-secondary" id="cancel-location-btn">Cancel</button>
         </div>
     </div>
 
@@ -318,16 +184,18 @@
                 <input type="file" id="edit-image" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" />
                 <small style="color: #666; display: block; margin-top: 5px;">Upload new image to replace current one. Max size: 5MB</small>
                 <div id="edit-image-preview" class="image-preview"></div>
-                <button type="button" class="btn-secondary" id="remove-image-btn" style="display: none; margin-top: 10px;">Remove Image</button>
+                <button type="button" class="btn btn-secondary" id="remove-image-btn" style="display: none; margin-top: 10px;">Remove Image</button>
             </div>
             
-            <button class="btn-primary" id="update-location-btn">Update Location</button>
-            <button class="btn-danger" id="delete-location-btn">Delete Location</button>
-            <button class="btn-secondary" id="cancel-edit-btn">Cancel</button>
+            <button class="btn btn-primary" id="update-location-btn">Update Location</button>
+            <button class="btn btn-danger" id="delete-location-btn">Delete Location</button>
+            <button class="btn btn-secondary" id="cancel-edit-btn">Cancel</button>
         </div>
     </div>
 
     <script type="module" src="./js/index.js"></script>
 </body>
 </html>
+
+
 

@@ -8,8 +8,6 @@
     <meta name="theme-color" content="#007cba">
     <link rel="stylesheet" href="./css/common.css">
     <meta name="google-adsense-account" content="ca-pub-4923804767674808">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4923804767674808" crossorigin="anonymous"></script>
-    
     <style>
         /* Page-specific styles only */
         body { 
@@ -166,16 +164,14 @@
         const MESSAGE_TIMEOUT = 5000;
         const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
 
-        // Session Check (allow both authenticated and anonymous access)
+        // Session Check
         onAuthStateChanged(auth, async (user) => {
-            currentUser = user;
-
-            // If no user, show login prompt instead of redirecting
             if (!user) {
-                showAnonymousMessage();
-                showLoading(false);
+                window.location.href = './login.html';
                 return;
             }
+
+            currentUser = user;
             
             // Check if viewing another user's profile
             const urlParams = new URLSearchParams(window.location.search);
@@ -198,22 +194,6 @@
             // Update UI based on profile ownership
             updateUIForProfileMode();
         });
-
-        // Show message for anonymous users
-        function showAnonymousMessage() {
-            const container = document.querySelector('.container');
-            container.innerHTML = `
-                <div class="profile-card">
-                    <a href="./index.html" class="btn btn-primary" id="back-btn">← Back to Map</a>
-                    <div style="text-align: center; padding: 40px 20px;">
-                        <h2>Profile & Settings</h2>
-                        <p style="color: #666; margin: 20px 0;">Please login to view and manage your profile.</p>
-                        <a href="./login.html" class="btn btn-primary" style="display: inline-block; margin: 10px;">Login / Sign Up</a>
-                        <a href="./index.html" class="btn btn-secondary" style="display: inline-block; margin: 10px;">Continue as Guest</a>
-                    </div>
-                </div>
-            `;
-        }
 
         // Update UI based on whether viewing own profile or another user's
         function updateUIForProfileMode() {
@@ -680,7 +660,6 @@
     </script>
 </body>
 </html>
-
 
 
 

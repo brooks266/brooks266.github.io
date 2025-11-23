@@ -23,26 +23,26 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedEditImage = null;
     let currentLocationImageUrl = null;
 
-    // Session Check: Allow both authenticated and anonymous access
+    // Session Check: Redirect to login if not authenticated
     onAuthStateChanged(auth, async (user) => {
-        currentUser = user;
-
-        if (user) {
-            // Load user profile from Firestore for authenticated users
-            try {
-                const userDoc = await getDoc(doc(db, 'users', user.uid));
-                if (userDoc.exists()) {
-                    currentUserData = userDoc.data();
-                }
-            } catch (error) {
-                console.error('Error loading user profile:', error);
-            }
-        } else {
-            // Anonymous user - no profile data
-            currentUserData = null;
+        if (!user) {
+            window.location.href = './login.html';
+            return;
         }
 
-        // Initialize map for all users (authenticated or anonymous)
+        currentUser = user;
+
+        // Load user profile from Firestore
+        try {
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists()) {
+                currentUserData = userDoc.data();
+            }
+        } catch (error) {
+            console.error('Error loading user profile:', error);
+        }
+
+        // Initialize map after authentication
         initializeMap();
     });
 
@@ -641,14 +641,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Toggle creation mode
     function toggleCreationMode() {
-        // Check if user is authenticated
-        if (!currentUser) {
-            showError('Please login to add locations.');
-            // Redirect to login page
-            window.location.href = './login.html';
-            return;
-        }
-
         creationMode = !creationMode;
         const addBtn = document.getElementById('add-btn');
         addBtn.classList.toggle('active', creationMode);
