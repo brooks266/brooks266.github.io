@@ -273,7 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {
             popupContent += `<br><strong>Address:</strong><br>${address}`;
         }
         if (user) {
-            popupContent += `<br><strong>User:</strong> ${user}`;
+            popupContent += `<br><strong>Added By:</strong><br>${user}`;
         }
         if (notes) {
             popupContent += `<br><br><strong>Notes:</strong><br>${notes}`;
@@ -782,6 +782,7 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedNewImage = null;
     }
 });
+
 
 
 
