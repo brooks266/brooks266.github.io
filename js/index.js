@@ -229,7 +229,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const userProfile = await fetchUserProfile(userId);
                 const username = userProfile.displayName;
 
-                const popupContent = createPopupContent(locationId, title, lat, lon, notes, address, username, userId);
+                // Get voting data from the original Firestore document
+                const locationDoc = querySnapshot.docs.find(doc => doc.id === locationId);
+                const locationDocData = locationDoc ? locationDoc.data() : {};
+                const upvotes = locationDocData.upvotes || [];
+                const downvotes = locationDocData.downvotes || [];
+
+                const popupContent = createPopupContent(locationId, title, lat, lon, notes, address, username, userId, upvotes, downvotes);
                 const marker = L.marker([lat, lon]).bindPopup(popupContent);
 
                 const markerObj = {
@@ -241,6 +247,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     userId,
                     lat,
                     lon,
+                    upvotes,
+                    downvotes,
                     marker
                 };
 
@@ -267,8 +275,30 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Create popup content
-    function createPopupContent(locationId, title, lat, lon, notes, address, user, userId) {
+    function createPopupContent(locationId, title, lat, lon, notes, address, user, userId, upvotes = [], downvotes = []) {
         let popupContent = `<b>${title}</b><br>`;
+        
+        // Calculate and display vote score
+        const upvoteCount = upvotes.length;
+        const downvoteCount = downvotes.length;
+        const voteScore = upvoteCount - downvoteCount;
+        
+        // Determine color based on score
+        let scoreColor = '#666'; // gray for zero
+        let scorePrefix = '';
+        if (voteScore > 0) {
+            scoreColor = '#28a745'; // green for positive
+            scorePrefix = '+';
+        } else if (voteScore < 0) {
+            scoreColor = '#dc3545'; // red for negative
+        }
+        
+        // Add vote score display
+        popupContent += `<div style="margin: 8px 0; padding: 6px 10px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid ${scoreColor};">
+            <strong style="color: ${scoreColor}; font-size: 14px;">Score: ${scorePrefix}${voteScore}</strong>
+            <span style="color: #666; font-size: 12px; margin-left: 8px;">(↑${upvoteCount} ↓${downvoteCount})</span>
+        </div>`;
+        
         if (address) {
             popupContent += `<br><strong>Address:</strong><br>${address}`;
         }
