@@ -34,8 +34,11 @@
     <div id="message" class="message"></div>
 
     <script type="module">
-        import { auth, db, onAuthStateChanged, doc, getDoc } from './js/firebase-config.js';
-        import { showLoading, showError } from './js/utils.js';
+        import { auth, db, onAuthStateChanged, doc, getDoc, updateDoc, arrayUnion, arrayRemove } from './js/firebase-config.js';
+        import { showLoading, showError, showSuccess } from './js/utils.js';
+
+        let currentUser = null;
+        let currentLocationId = null;
 
         // Check authentication
         onAuthStateChanged(auth, async (user) => {
@@ -44,11 +47,14 @@
                 return;
             }
 
+            currentUser = user;
+
             // Parse URL query param for location ID
             const urlParams = new URLSearchParams(window.location.search);
             const locationId = urlParams.get('id');
 
             if (locationId) {
+                currentLocationId = locationId;
                 await loadLocationDetails(locationId);
             } else {
                 showError('No location ID provided.');
@@ -108,12 +114,109 @@
                     html += `<a href="${navigateUrl}" target="_blank" class="btn btn-secondary btn-location">Navigate to Location</a>`;
 
                     document.getElementById('details').innerHTML = html;
+
+                    // Load and display voting section
+                    await loadVotingSection(locationId, data);
                 } else {
                     showError('Location not found.');
                 }
             } catch (error) {
                 console.error('Error loading location details:', error);
                 showError('Failed to load location details.');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Load voting section
+        async function loadVotingSection(locationId, data) {
+            const upvotes = data.upvotes || [];
+            const downvotes = data.downvotes || [];
+            const upvoteCount = upvotes.length;
+            const downvoteCount = downvotes.length;
+
+            // Check if current user has voted
+            const hasUpvoted = upvotes.includes(currentUser.uid);
+            const hasDownvoted = downvotes.includes(currentUser.uid);
+
+            // Create voting section HTML
+            const votingHtml = `
+                <div class="voting-section">
+                    <h3>Rate this Location</h3>
+                    <div class="vote-buttons">
+                        <button id="upvote-btn" class="vote-btn upvote-btn ${hasUpvoted ? 'voted' : ''}" ${hasUpvoted || hasDownvoted ? '' : ''}>
+                            <span class="vote-icon">+</span>
+                            <span class="vote-count">${upvoteCount}</span>
+                        </button>
+                        <button id="downvote-btn" class="vote-btn downvote-btn ${hasDownvoted ? 'voted' : ''}" ${hasUpvoted || hasDownvoted ? '' : ''}>
+                            <span class="vote-icon">−</span>
+                            <span class="vote-count">${downvoteCount}</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Insert voting section after details
+            document.getElementById('details').insertAdjacentHTML('beforeend', votingHtml);
+
+            // Add event listeners
+            document.getElementById('upvote-btn').addEventListener('click', () => handleVote('upvote', hasUpvoted, hasDownvoted));
+            document.getElementById('downvote-btn').addEventListener('click', () => handleVote('downvote', hasUpvoted, hasDownvoted));
+        }
+
+        // Handle vote action
+        async function handleVote(voteType, hasUpvoted, hasDownvoted) {
+            if (!currentUser || !currentLocationId) return;
+
+            showLoading(true);
+
+            try {
+                const locationRef = doc(db, 'locations', currentLocationId);
+
+                if (voteType === 'upvote') {
+                    if (hasUpvoted) {
+                        // Remove upvote (toggle off)
+                        await updateDoc(locationRef, {
+                            upvotes: arrayRemove(currentUser.uid)
+                        });
+                        showSuccess('Upvote removed!');
+                    } else {
+                        // Add upvote and remove downvote if exists
+                        const updates = {
+                            upvotes: arrayUnion(currentUser.uid)
+                        };
+                        if (hasDownvoted) {
+                            updates.downvotes = arrayRemove(currentUser.uid);
+                        }
+                        await updateDoc(locationRef, updates);
+                        showSuccess('Location upvoted!');
+                    }
+                } else if (voteType === 'downvote') {
+                    if (hasDownvoted) {
+                        // Remove downvote (toggle off)
+                        await updateDoc(locationRef, {
+                            downvotes: arrayRemove(currentUser.uid)
+                        });
+                        showSuccess('Downvote removed!');
+                    } else {
+                        // Add downvote and remove upvote if exists
+                        const updates = {
+                            downvotes: arrayUnion(currentUser.uid)
+                        };
+                        if (hasUpvoted) {
+                            updates.upvotes = arrayRemove(currentUser.uid);
+                        }
+                        await updateDoc(locationRef, updates);
+                        showSuccess('Location downvoted!');
+                    }
+                }
+
+                // Reload the page to reflect changes
+                await loadLocationDetails(currentLocationId);
+
+            } catch (error) {
+                console.error('Error voting:', error);
+                showError('Failed to register vote. Please try again.');
             } finally {
                 showLoading(false);
             }
