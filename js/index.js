@@ -644,13 +644,71 @@ document.addEventListener('DOMContentLoaded', function() {
                 visibleCount++;
             });
         } else {
+            // Check for rating search patterns
+            // Supports: "rating>100", "rating<5", ">1000", "<200", "rating>=50", "rating<=10", "rating=5"
+            const ratingPattern = /(?:rating\s*([><=]+)\s*(-?\d+))|^([><=]+)\s*(-?\d+)$/i;
+            const ratingMatch = term.match(ratingPattern);
+            
+            let ratingFilter = null;
+            let textSearchTerm = term;
+            
+            if (ratingMatch) {
+                // Extract operator and value
+                const operator = ratingMatch[1] || ratingMatch[3];
+                const value = parseInt(ratingMatch[2] || ratingMatch[4]);
+                
+                ratingFilter = { operator, value };
+                
+                // Remove rating pattern from text search term
+                textSearchTerm = term.replace(ratingPattern, '').trim();
+            }
+            
             allMarkers.forEach(markerObj => {
-                const titleMatch = markerObj.title.toLowerCase().includes(term);
-                const notesMatch = markerObj.notes.toLowerCase().includes(term);
-                const addressMatch = (markerObj.address || '').toLowerCase().includes(term);
-                const userMatch = (markerObj.user || '').toLowerCase().includes(term);
-
-                if (titleMatch || notesMatch || addressMatch || userMatch) {
+                let matchesRating = true;
+                let matchesText = true;
+                
+                // Check rating filter if present
+                if (ratingFilter) {
+                    const upvoteCount = (markerObj.upvotes || []).length;
+                    const downvoteCount = (markerObj.downvotes || []).length;
+                    const voteScore = upvoteCount - downvoteCount;
+                    
+                    const { operator, value } = ratingFilter;
+                    
+                    switch (operator) {
+                        case '>':
+                            matchesRating = voteScore > value;
+                            break;
+                        case '<':
+                            matchesRating = voteScore < value;
+                            break;
+                        case '>=':
+                            matchesRating = voteScore >= value;
+                            break;
+                        case '<=':
+                            matchesRating = voteScore <= value;
+                            break;
+                        case '=':
+                        case '==':
+                            matchesRating = voteScore === value;
+                            break;
+                        default:
+                            matchesRating = true;
+                    }
+                }
+                
+                // Check text search if present
+                if (textSearchTerm) {
+                    const titleMatch = markerObj.title.toLowerCase().includes(textSearchTerm);
+                    const notesMatch = markerObj.notes.toLowerCase().includes(textSearchTerm);
+                    const addressMatch = (markerObj.address || '').toLowerCase().includes(textSearchTerm);
+                    const userMatch = (markerObj.user || '').toLowerCase().includes(textSearchTerm);
+                    
+                    matchesText = titleMatch || notesMatch || addressMatch || userMatch;
+                }
+                
+                // Add marker if it matches both rating and text filters
+                if (matchesRating && matchesText) {
                     markers.addLayer(markerObj.marker);
                     visibleCount++;
                 }
