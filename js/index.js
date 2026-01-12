@@ -1,6 +1,6 @@
 import { auth, db, storage, ref, uploadBytes, getDownloadURL, deleteObject,
          onAuthStateChanged, signOut, collection, addDoc,
-         getDocs, doc, getDoc, updateDoc, deleteDoc, query, where,
+         getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where,
          orderBy, serverTimestamp } from './firebase-config.js';
 import { showLoading, showError, showSuccess, handleError } from './utils.js';
 
@@ -37,6 +37,23 @@ document.addEventListener('DOMContentLoaded', function() {
             const userDoc = await getDoc(doc(db, 'users', user.uid));
             if (userDoc.exists()) {
                 currentUserData = userDoc.data();
+            } else {
+                // Create user profile if it doesn't exist (safety check)
+                console.log('User profile not found, creating default profile...');
+                currentUserData = {
+                    displayName: user.displayName || user.email?.split('@')[0] || 'User',
+                    email: user.email || '',
+                    bio: '',
+                    createdAt: serverTimestamp(),
+                    lastLogin: serverTimestamp()
+                };
+                
+                try {
+                    await setDoc(doc(db, 'users', user.uid), currentUserData);
+                    console.log('Default user profile created successfully');
+                } catch (createError) {
+                    console.error('Error creating default profile:', createError);
+                }
             }
         } catch (error) {
             console.error('Error loading user profile:', error);
