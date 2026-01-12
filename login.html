@@ -93,15 +93,10 @@
                  getFirebaseErrorMessage } 
         from './js/utils.js';
 
-        // Check if already logged in - but wait for auth to initialize
-        let authInitialized = false;
+        // Check if already logged in
         onAuthStateChanged(auth, (user) => {
-            if (!authInitialized) {
-                authInitialized = true;
-                // Only redirect if user is already logged in when page first loads
-                if (user) {
-                    window.location.href = './index.html';
-                }
+            if (user) {
+                window.location.href = './index.html';
             }
         });
 
@@ -153,8 +148,7 @@
                     }, { merge: true });
                 }
 
-                // Manually redirect after successful login
-                window.location.href = './index.html';
+                // Redirect handled by onAuthStateChanged
             } catch (error) {
                 showLoading(false);
                 console.error('Login error:', error);
@@ -207,41 +201,8 @@
                 };
                 
                 console.log('Creating profile with data:', profileData);
-                
-                // Retry logic for Firestore write (up to 3 attempts)
-                let profileCreated = false;
-                let attempts = 0;
-                const maxAttempts = 3;
-                
-                while (!profileCreated && attempts < maxAttempts) {
-                    attempts++;
-                    try {
-                        await setDoc(doc(db, 'users', userCredential.user.uid), profileData);
-                        
-                        // Verify the profile was created by reading it back
-                        const verifyDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
-                        if (verifyDoc.exists() && verifyDoc.data().displayName === name) {
-                            profileCreated = true;
-                            console.log('Profile created and verified successfully with displayName:', name);
-                        } else {
-                            console.warn(`Profile verification failed on attempt ${attempts}`);
-                            if (attempts < maxAttempts) {
-                                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
-                            }
-                        }
-                    } catch (writeError) {
-                        console.error(`Profile creation attempt ${attempts} failed:`, writeError);
-                        if (attempts < maxAttempts) {
-                            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
-                        } else {
-                            throw writeError; // Throw on final attempt
-                        }
-                    }
-                }
-                
-                if (!profileCreated) {
-                    throw new Error('Failed to create user profile after multiple attempts');
-                }
+                await setDoc(doc(db, 'users', userCredential.user.uid), profileData);
+                console.log('Profile created successfully with displayName:', name);
 
                 // Send email verification
                 await sendEmailVerification(userCredential.user);
@@ -259,8 +220,6 @@
                 const errorMessage = getFirebaseErrorMessage(error, 'signup');
                 if (errorMessage) {
                     showError(errorMessage);
-                } else {
-                    showError('Failed to create account. Please try again.');
                 }
             }
         };
@@ -291,8 +250,7 @@
                     }, { merge: true });
                 }
 
-                // Manually redirect after successful Google sign-in
-                window.location.href = './index.html';
+                // Redirect handled by onAuthStateChanged
             } catch (error) {
                 showLoading(false);
                 console.error('Google sign-in error:', error);
