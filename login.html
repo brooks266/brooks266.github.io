@@ -93,8 +93,17 @@
                  getFirebaseErrorMessage } 
         from './js/utils.js';
 
-        // Check if already logged in on page load only
-        auth.currentUser && (window.location.href = './index.html');
+        // Check if already logged in - but wait for auth to initialize
+        let authInitialized = false;
+        onAuthStateChanged(auth, (user) => {
+            if (!authInitialized) {
+                authInitialized = true;
+                // Only redirect if user is already logged in when page first loads
+                if (user) {
+                    window.location.href = './index.html';
+                }
+            }
+        });
 
         // Switch between login and signup tabs
         window.switchTab = function(tab) {
