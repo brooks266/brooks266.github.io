@@ -93,10 +93,16 @@
                  getFirebaseErrorMessage } 
         from './js/utils.js';
 
-        // Check if already logged in
+        // Check if already logged in - but wait for auth to initialize
+        let authInitialized = false;
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                window.location.href = './index.html';
+            if (!authInitialized) {
+                authInitialized = true;
+                // Only redirect if user is already logged in when page first loads
+                // AND we're not already on index.html
+                if (user && !window.location.pathname.includes('index.html')) {
+                    window.location.href = './index.html';
+                }
             }
         });
 
@@ -127,12 +133,32 @@
             try {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 
-                // Update last login
-                await setDoc(doc(db, 'users', userCredential.user.uid), {
-                    lastLogin: serverTimestamp()
-                }, { merge: true });
+                // Check if user profile exists, if not create a minimal one
+                const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+                
+                if (!userDoc.exists()) {
+                    // Create minimal user profile if it doesn't exist
+                    // User can update their display name in settings
+                    await setDoc(doc(db, 'users', userCredential.user.uid), {
+                        displayName: userCredential.user.email?.split('@')[0] || 'User',
+                        email: userCredential.user.email,
+                        bio: '',
+                        createdAt: serverTimestamp(),
+                        lastLogin: serverTimestamp()
+                    });
+                    console.log('Created missing user profile during login');
+                } else {
+                    // Update last login for existing profile
+                    await setDoc(doc(db, 'users', userCredential.user.uid), {
+                        lastLogin: serverTimestamp()
+                    }, { merge: true });
+                }
 
-                // Redirect handled by onAuthStateChanged
+                // Manually redirect after successful login
+                // Only redirect if not already on index.html
+                if (!window.location.pathname.includes('index.html')) {
+                    window.location.href = './index.html';
+                }
             } catch (error) {
                 showLoading(false);
                 console.error('Login error:', error);
@@ -163,20 +189,63 @@
                 return;
             }
 
+            if (!name) {
+                showMessage('Display name is required!', 'error');
+                return;
+            }
+
             showLoading(true);
 
             try {
                 // Create user account
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                console.log('User account created:', userCredential.user.uid);
                 
-                // Create user profile in Firestore
-                await setDoc(doc(db, 'users', userCredential.user.uid), {
+                // Create user profile in Firestore with the display name from the form
+                const profileData = {
                     displayName: name,
                     email: email,
                     bio: '',
                     createdAt: serverTimestamp(),
                     lastLogin: serverTimestamp()
-                });
+                };
+                
+                console.log('Creating profile with data:', profileData);
+                
+                // Retry logic for Firestore write (up to 3 attempts)
+                let profileCreated = false;
+                let attempts = 0;
+                const maxAttempts = 3;
+                
+                while (!profileCreated && attempts < maxAttempts) {
+                    attempts++;
+                    try {
+                        await setDoc(doc(db, 'users', userCredential.user.uid), profileData);
+                        
+                        // Verify the profile was created by reading it back
+                        const verifyDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+                        if (verifyDoc.exists() && verifyDoc.data().displayName === name) {
+                            profileCreated = true;
+                            console.log('Profile created and verified successfully with displayName:', name);
+                        } else {
+                            console.warn(`Profile verification failed on attempt ${attempts}`);
+                            if (attempts < maxAttempts) {
+                                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+                            }
+                        }
+                    } catch (writeError) {
+                        console.error(`Profile creation attempt ${attempts} failed:`, writeError);
+                        if (attempts < maxAttempts) {
+                            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+                        } else {
+                            throw writeError; // Throw on final attempt
+                        }
+                    }
+                }
+                
+                if (!profileCreated) {
+                    throw new Error('Failed to create user profile after multiple attempts');
+                }
 
                 // Send email verification
                 await sendEmailVerification(userCredential.user);
@@ -185,7 +254,10 @@
                 
                 // Redirect after 2 seconds
                 setTimeout(() => {
-                    window.location.href = './index.html';
+                    // Only redirect if not already on index.html
+                    if (!window.location.pathname.includes('index.html')) {
+                        window.location.href = './index.html';
+                    }
                 }, 2000);
 
             } catch (error) {
@@ -194,6 +266,8 @@
                 const errorMessage = getFirebaseErrorMessage(error, 'signup');
                 if (errorMessage) {
                     showError(errorMessage);
+                } else {
+                    showError('Failed to create account. Please try again.');
                 }
             }
         };
@@ -224,7 +298,11 @@
                     }, { merge: true });
                 }
 
-                // Redirect handled by onAuthStateChanged
+                // Manually redirect after successful Google sign-in
+                // Only redirect if not already on index.html
+                if (!window.location.pathname.includes('index.html')) {
+                    window.location.href = './index.html';
+                }
             } catch (error) {
                 showLoading(false);
                 console.error('Google sign-in error:', error);
@@ -256,10 +334,3 @@
 </body>
 
 </html>
-
-
-
-
-
-
-

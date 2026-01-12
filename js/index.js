@@ -1,6 +1,6 @@
 import { auth, db, storage, ref, uploadBytes, getDownloadURL, deleteObject,
          onAuthStateChanged, signOut, collection, addDoc,
-         getDocs, doc, getDoc, updateDoc, deleteDoc, query, where,
+         getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where,
          orderBy, serverTimestamp } from './firebase-config.js';
 import { showLoading, showError, showSuccess, handleError } from './utils.js';
 
@@ -24,10 +24,24 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentLocationImageUrl = null;
 
     // Session Check: Redirect to login if not authenticated
+    let authCheckComplete = false;
     onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-            window.location.href = './login.html';
-            return;
+        if (!authCheckComplete) {
+            authCheckComplete = true;
+            // Only redirect if user is not authenticated AND we're not already on login.html
+            if (!user && !window.location.pathname.includes('login.html')) {
+                window.location.href = './login.html';
+                return;
+            }
+            
+            if (!user) {
+                return;
+            }
+        } else {
+            // If auth state changes after initial check, don't redirect
+            if (!user) {
+                return;
+            }
         }
 
         currentUser = user;
@@ -37,6 +51,23 @@ document.addEventListener('DOMContentLoaded', function() {
             const userDoc = await getDoc(doc(db, 'users', user.uid));
             if (userDoc.exists()) {
                 currentUserData = userDoc.data();
+            } else {
+                // Create user profile if it doesn't exist (safety check)
+                console.log('User profile not found, creating default profile...');
+                currentUserData = {
+                    displayName: user.displayName || user.email?.split('@')[0] || 'User',
+                    email: user.email || '',
+                    bio: '',
+                    createdAt: serverTimestamp(),
+                    lastLogin: serverTimestamp()
+                };
+                
+                try {
+                    await setDoc(doc(db, 'users', user.uid), currentUserData);
+                    console.log('Default user profile created successfully');
+                } catch (createError) {
+                    console.error('Error creating default profile:', createError);
+                }
             }
         } catch (error) {
             console.error('Error loading user profile:', error);

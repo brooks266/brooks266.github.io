@@ -164,12 +164,26 @@
         const MESSAGE_TIMEOUT = 5000;
         const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
 
-        // Session Check
-        onAuthStateChanged(auth, async (user) => {
-            if (!user) {
+    // Session Check
+    let authCheckComplete = false;
+    onAuthStateChanged(auth, async (user) => {
+        if (!authCheckComplete) {
+            authCheckComplete = true;
+            // Only redirect if user is not authenticated AND we're not already on login.html
+            if (!user && !window.location.pathname.includes('login.html')) {
                 window.location.href = './login.html';
                 return;
             }
+            
+            if (!user) {
+                return;
+            }
+        } else {
+            // If auth state changes after initial check, don't redirect
+            if (!user) {
+                return;
+            }
+        }
 
             currentUser = user;
             
