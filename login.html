@@ -127,22 +127,20 @@
             try {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 
-                // Check if user profile exists, if not create a minimal one
+                // Check if user profile exists, if not create it
                 const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
                 
                 if (!userDoc.exists()) {
-                    // Create minimal user profile if it doesn't exist
-                    // User can update their display name in settings
+                    // Create user profile if it doesn't exist
                     await setDoc(doc(db, 'users', userCredential.user.uid), {
-                        displayName: userCredential.user.email?.split('@')[0] || 'User',
+                        displayName: userCredential.user.displayName || userCredential.user.email?.split('@')[0] || 'User',
                         email: userCredential.user.email,
                         bio: '',
                         createdAt: serverTimestamp(),
                         lastLogin: serverTimestamp()
                     });
-                    console.log('Created missing user profile during login');
                 } else {
-                    // Update last login for existing profile
+                    // Update last login
                     await setDoc(doc(db, 'users', userCredential.user.uid), {
                         lastLogin: serverTimestamp()
                     }, { merge: true });
@@ -179,30 +177,20 @@
                 return;
             }
 
-            if (!name) {
-                showMessage('Display name is required!', 'error');
-                return;
-            }
-
             showLoading(true);
 
             try {
                 // Create user account
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                console.log('User account created:', userCredential.user.uid);
                 
-                // Create user profile in Firestore with the display name from the form
-                const profileData = {
+                // Create user profile in Firestore
+                await setDoc(doc(db, 'users', userCredential.user.uid), {
                     displayName: name,
                     email: email,
                     bio: '',
                     createdAt: serverTimestamp(),
                     lastLogin: serverTimestamp()
-                };
-                
-                console.log('Creating profile with data:', profileData);
-                await setDoc(doc(db, 'users', userCredential.user.uid), profileData);
-                console.log('Profile created successfully with displayName:', name);
+                });
 
                 // Send email verification
                 await sendEmailVerification(userCredential.user);
