@@ -201,8 +201,41 @@
                 };
                 
                 console.log('Creating profile with data:', profileData);
-                await setDoc(doc(db, 'users', userCredential.user.uid), profileData);
-                console.log('Profile created successfully with displayName:', name);
+                
+                // Retry logic for Firestore write (up to 3 attempts)
+                let profileCreated = false;
+                let attempts = 0;
+                const maxAttempts = 3;
+                
+                while (!profileCreated && attempts < maxAttempts) {
+                    attempts++;
+                    try {
+                        await setDoc(doc(db, 'users', userCredential.user.uid), profileData);
+                        
+                        // Verify the profile was created by reading it back
+                        const verifyDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+                        if (verifyDoc.exists() && verifyDoc.data().displayName === name) {
+                            profileCreated = true;
+                            console.log('Profile created and verified successfully with displayName:', name);
+                        } else {
+                            console.warn(`Profile verification failed on attempt ${attempts}`);
+                            if (attempts < maxAttempts) {
+                                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+                            }
+                        }
+                    } catch (writeError) {
+                        console.error(`Profile creation attempt ${attempts} failed:`, writeError);
+                        if (attempts < maxAttempts) {
+                            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+                        } else {
+                            throw writeError; // Throw on final attempt
+                        }
+                    }
+                }
+                
+                if (!profileCreated) {
+                    throw new Error('Failed to create user profile after multiple attempts');
+                }
 
                 // Send email verification
                 await sendEmailVerification(userCredential.user);
@@ -220,6 +253,8 @@
                 const errorMessage = getFirebaseErrorMessage(error, 'signup');
                 if (errorMessage) {
                     showError(errorMessage);
+                } else {
+                    showError('Failed to create account. Please try again.');
                 }
             }
         };
