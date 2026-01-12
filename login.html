@@ -93,12 +93,8 @@
                  getFirebaseErrorMessage } 
         from './js/utils.js';
 
-        // Check if already logged in
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                window.location.href = './index.html';
-            }
-        });
+        // Check if already logged in on page load only
+        auth.currentUser && (window.location.href = './index.html');
 
         // Switch between login and signup tabs
         window.switchTab = function(tab) {
@@ -148,7 +144,8 @@
                     }, { merge: true });
                 }
 
-                // Redirect handled by onAuthStateChanged
+                // Manually redirect after successful login
+                window.location.href = './index.html';
             } catch (error) {
                 showLoading(false);
                 console.error('Login error:', error);
@@ -285,7 +282,8 @@
                     }, { merge: true });
                 }
 
-                // Redirect handled by onAuthStateChanged
+                // Manually redirect after successful Google sign-in
+                window.location.href = './index.html';
             } catch (error) {
                 showLoading(false);
                 console.error('Google sign-in error:', error);
@@ -315,4 +313,5 @@
         };
     </script>
 </body>
+
 </html>
