@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -90,28 +90,14 @@
         let selectedEditImage = null;
         let currentLocationImageUrl = null;
 
-        // Check authentication
+        // Check authentication and allow anonymous viewing
         let authCheckComplete = false;
         onAuthStateChanged(auth, async (user) => {
             if (!authCheckComplete) {
                 authCheckComplete = true;
-                // Only redirect if user is not authenticated AND we're not already on login.html
-                if (!user && !window.location.pathname.includes('login.html')) {
-                    window.location.href = './login.html';
-                    return;
-                }
-                
-                if (!user) {
-                    return;
-                }
-            } else {
-                // If auth state changes after initial check, don't redirect
-                if (!user) {
-                    return;
-                }
             }
 
-            currentUser = user;
+            currentUser = user || null;
 
             // Parse URL query param for location ID
             const urlParams = new URLSearchParams(window.location.search);
@@ -209,19 +195,20 @@
             const downvoteCount = downvotes.length;
 
             // Check if current user has voted
-            const hasUpvoted = upvotes.includes(currentUser.uid);
-            const hasDownvoted = downvotes.includes(currentUser.uid);
+            const hasUpvoted = currentUser ? upvotes.includes(currentUser.uid) : false;
+            const hasDownvoted = currentUser ? downvotes.includes(currentUser.uid) : false;
+            const voteButtonsDisabled = currentUser ? '' : 'disabled';
 
             // Create voting section HTML
             const votingHtml = `
                 <div class="voting-section">
                     <h3>Rate this Location</h3>
                     <div class="vote-buttons">
-                        <button id="upvote-btn" class="vote-btn upvote-btn ${hasUpvoted ? 'voted' : ''}" ${hasUpvoted || hasDownvoted ? '' : ''}>
+                        <button id="upvote-btn" class="vote-btn upvote-btn ${hasUpvoted ? 'voted' : ''}" ${voteButtonsDisabled}>
                             <span class="vote-icon">+</span>
                             <span class="vote-count">${upvoteCount}</span>
                         </button>
-                        <button id="downvote-btn" class="vote-btn downvote-btn ${hasDownvoted ? 'voted' : ''}" ${hasUpvoted || hasDownvoted ? '' : ''}>
+                        <button id="downvote-btn" class="vote-btn downvote-btn ${hasDownvoted ? 'voted' : ''}" ${voteButtonsDisabled}>
                             <span class="vote-icon">−</span>
                             <span class="vote-count">${downvoteCount}</span>
                         </button>
@@ -239,7 +226,11 @@
 
         // Handle vote action
         async function handleVote(voteType, hasUpvoted, hasDownvoted) {
-            if (!currentUser || !currentLocationId) return;
+            if (!currentUser) {
+                showError('Please log in to vote on locations.');
+                return;
+            }
+            if (!currentLocationId) return;
 
             showLoading(true);
 

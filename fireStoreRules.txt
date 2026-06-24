@@ -1,0 +1,102 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the document
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // Users collection rules
+    match /users/{userId} {
+      // Anyone can read public user profiles for marker attribution
+      allow read: if true;
+      
+      // Users can only create/update their own profile
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow update: if isAuthenticated() && isOwner(userId);
+      
+      // Users can delete their own profile
+      allow delete: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // Locations collection rules
+    match /locations/{locationId} {
+      // Anyone can read all locations for public map viewing
+      allow read: if true;
+      
+      // Any authenticated user can create a location
+      allow create: if isAuthenticated() 
+                    && request.resource.data.userId == request.auth.uid;
+      
+      // Users can update their own locations (full update)
+      // OR any authenticated user can update only the upvotes/downvotes fields
+      allow update: if isAuthenticated() && (
+        // Owner can update everything
+        resource.data.userId == request.auth.uid
+        ||
+        // Any authenticated user can update only voting fields
+        (
+          // Only upvotes and/or downvotes fields are being modified
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['upvotes', 'downvotes'])
+          &&
+          // Ensure upvotes is an array (if present)
+          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['upvotes']) 
+            || request.resource.data.upvotes is list)
+          &&
+          // Ensure downvotes is an array (if present)
+          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['downvotes']) 
+            || request.resource.data.downvotes is list)
+          &&
+          // User can only add/remove their own ID from arrays
+          (
+            // Check upvotes changes
+            (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['upvotes'])
+              || 
+              (
+                // User is adding themselves to upvotes
+                (request.resource.data.upvotes.hasAll(resource.data.get('upvotes', [])) 
+                  && request.resource.data.upvotes.toSet().difference(resource.data.get('upvotes', []).toSet()).hasOnly([request.auth.uid]))
+                ||
+                // User is removing themselves from upvotes
+                (resource.data.get('upvotes', []).hasAll(request.resource.data.upvotes) 
+                  && resource.data.get('upvotes', []).toSet().difference(request.resource.data.upvotes.toSet()).hasOnly([request.auth.uid]))
+              )
+            )
+            &&
+            // Check downvotes changes
+            (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['downvotes'])
+              || 
+              (
+                // User is adding themselves to downvotes
+                (request.resource.data.downvotes.hasAll(resource.data.get('downvotes', [])) 
+                  && request.resource.data.downvotes.toSet().difference(resource.data.get('downvotes', []).toSet()).hasOnly([request.auth.uid]))
+                ||
+                // User is removing themselves from downvotes
+                (resource.data.get('downvotes', []).hasAll(request.resource.data.downvotes) 
+                  && resource.data.get('downvotes', []).toSet().difference(request.resource.data.downvotes.toSet()).hasOnly([request.auth.uid]))
+              )
+            )
+          )
+        )
+      );
+      
+      // Users can only delete their own locations
+      allow delete: if isAuthenticated() 
+                    && resource.data.userId == request.auth.uid;
+    }
+    
+    match /locations/{locationId}/{imageFile} {
+      allow read: if true;
+      allow write: if request.auth != null 
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null;
+    }
+  }
+}
