@@ -72,9 +72,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (markers) {
             const uid = currentUser ? currentUser.uid : null;
+            console.log(`[Auth Change] uid: ${uid}, lastLoadUserUid: ${lastLoadUserUid}, shouldReload: ${uid !== lastLoadUserUid}`);
             if (uid !== lastLoadUserUid) {
+                console.log(`[Auth Change] Reloading markers for user change...`);
                 await loadLocationsFromFirestore();
                 lastLoadUserUid = uid;
+                console.log(`[Auth Change] Reload complete, lastLoadUserUid now: ${lastLoadUserUid}`);
             }
         }
     });
@@ -130,8 +133,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Load locations from Firestore
+        console.log(`[initializeMap] Starting initial location load...`);
         await loadLocationsFromFirestore();
         lastLoadUserUid = currentUser ? currentUser.uid : null;
+        console.log(`[initializeMap] Initial load complete, lastLoadUserUid: ${lastLoadUserUid}`);
 
         // Event listeners
         document.getElementById('add-btn').addEventListener('click', toggleCreationMode);
@@ -241,6 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load locations from Firestore with optimized performance
     async function loadLocationsFromFirestore() {
         const loadId = ++locationLoadCounter;
+        console.log(`[loadLocationsFromFirestore] Load ${loadId} starting...`);
         showLoading(true);
         try {
             // Clear existing markers from the cluster group
@@ -252,8 +258,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (loadId !== locationLoadCounter) {
                 // A newer load started while this one was still fetching.
+                console.log(`[loadLocationsFromFirestore] Load ${loadId} cancelled (newer load ${locationLoadCounter} in progress)`);
                 return;
             }
+            console.log(`[loadLocationsFromFirestore] Load ${loadId} proceeding with ${querySnapshot.docs.length} documents`);
 
             // Hide loading overlay early - we'll show markers immediately
             showLoading(false);
@@ -345,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Add remaining markers
             currentBatch.forEach(obj => markers.addLayer(obj.marker));
 
-            console.log(`${validMarkers} markers loaded from Firestore.`);
+            console.log(`[loadLocationsFromFirestore] Load ${loadId} complete: ${validMarkers} markers loaded from Firestore.`);
         } catch (error) {
             console.error('Error loading locations:', error);
             showError('Failed to load locations. Please refresh the page.');
