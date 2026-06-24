@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedNewImage = null;
     let selectedEditImage = null;
     let currentLocationImageUrl = null;
+    let locationLoadCounter = 0;
 
     // Session Check: track whether the user is authenticated
     let authCheckComplete = false;
@@ -169,7 +170,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Start the public map immediately when the page loads.
-    initializeMap();
 
     function updateAuthUI() {
         const addBtn = document.getElementById('add-btn');
@@ -234,6 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load locations from Firestore with optimized performance
     async function loadLocationsFromFirestore() {
+        const loadId = ++locationLoadCounter;
         showLoading(true);
         try {
             // Clear existing markers from the cluster group
@@ -242,6 +243,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const locationsRef = collection(db, 'locations');
             const q = query(locationsRef, orderBy('createdAt', 'desc'));
             const querySnapshot = await getDocs(q);
+
+            if (loadId !== locationLoadCounter) {
+                // A newer load started while this one was still fetching.
+                return;
+            }
 
             // Hide loading overlay early - we'll show markers immediately
             showLoading(false);
