@@ -89,8 +89,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initialize the map with default view (will be updated if geolocation succeeds)
         map = L.map('map').setView([39.8283, -98.5795], 4);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
         markers = L.markerClusterGroup({

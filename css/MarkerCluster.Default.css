@@ -58,25 +58,3 @@
 .marker-cluster span {
 	line-height: 30px;
 	}
-
-/* ===== DARK MODE CLUSTER STYLES ===== */
-:root[data-theme="dark"] .marker-cluster-small {
-	background-color: rgba(100, 150, 200, 0.7);
-}
-:root[data-theme="dark"] .marker-cluster-small div {
-	background-color: rgba(70, 130, 180, 0.8);
-}
-
-:root[data-theme="dark"] .marker-cluster-medium {
-	background-color: rgba(255, 180, 50, 0.7);
-}
-:root[data-theme="dark"] .marker-cluster-medium div {
-	background-color: rgba(255, 140, 0, 0.8);
-}
-
-:root[data-theme="dark"] .marker-cluster-large {
-	background-color: rgba(255, 100, 100, 0.7);
-}
-:root[data-theme="dark"] .marker-cluster-large div {
-	background-color: rgba(220, 80, 80, 0.8);
-}

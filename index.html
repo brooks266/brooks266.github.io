@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -53,7 +53,7 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 100;
-            background: var(--bg-white);
+            background: white;
             padding: 15px;
             border-radius: var(--border-radius);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -70,14 +70,10 @@
             min-width: 45vw;
             border: 1px solid #ddd;
             padding: 10px;
-            background: var(--bg-white);
+            background: white;
             transition: all 0.3s ease;
             box-sizing: border-box;
             margin: 0;
-        }
-
-        :root[data-theme="dark"] #search {
-            border-color: #444;
         }
         
         #search:focus {
@@ -131,10 +127,6 @@
             border-radius: 4px; 
             z-index: 1001; 
             font-size: 14px; 
-        }
-
-        :root[data-theme="dark"] #offline-message {
-            background: #e67e22;
         }
     </style>
 </head>
