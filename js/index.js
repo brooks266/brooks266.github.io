@@ -249,6 +249,13 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(`[loadLocationsFromFirestore] Load ${loadId} starting...`);
         showLoading(true);
         try {
+            // Check if a newer load has started before clearing
+            if (loadId !== locationLoadCounter) {
+                console.log(`[loadLocationsFromFirestore] Load ${loadId} skipped (newer load ${locationLoadCounter} in progress)`);
+                showLoading(false);
+                return;
+            }
+            
             // Clear existing markers from the cluster group
             markers.clearLayers();
                  
@@ -345,15 +352,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Add markers in larger batches
                 if (currentBatch.length >= batchSize) {
-                    currentBatch.forEach(obj => markers.addLayer(obj.marker));
+                    if (loadId === locationLoadCounter) {
+                        currentBatch.forEach(obj => markers.addLayer(obj.marker));
+                    }
                     currentBatch = [];
                 }
             }
 
             // Add remaining markers
-            currentBatch.forEach(obj => markers.addLayer(obj.marker));
-
-            console.log(`[loadLocationsFromFirestore] Load ${loadId} complete: ${validMarkers} markers loaded from Firestore.`);
+            if (loadId === locationLoadCounter) {
+                currentBatch.forEach(obj => markers.addLayer(obj.marker));
+                console.log(`[loadLocationsFromFirestore] Load ${loadId} complete: ${validMarkers} markers loaded from Firestore.`);
+            } else {
+                console.log(`[loadLocationsFromFirestore] Load ${loadId} skipped marker addition (newer load ${locationLoadCounter} in progress)`);
+            }
         } catch (error) {
             console.error('Error loading locations:', error);
             showError('Failed to load locations. Please refresh the page.');
