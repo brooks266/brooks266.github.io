@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedEditImage = null;
     let currentLocationImageUrl = null;
     let locationLoadCounter = 0;
+    let lastLoadUserUid = null;
 
     // Session Check: track whether the user is authenticated
     let authCheckComplete = false;
@@ -70,14 +71,18 @@ document.addEventListener('DOMContentLoaded', function() {
         updateAuthUI();
 
         if (markers) {
-            await loadLocationsFromFirestore();
+            const uid = currentUser ? currentUser.uid : null;
+            if (uid !== lastLoadUserUid) {
+                await loadLocationsFromFirestore();
+                lastLoadUserUid = uid;
+            }
         }
     });
 
     // Initialize the public map immediately, before auth completes
     initializeMap();
 
-    function initializeMap() {
+    async function initializeMap() {
         // Initialize the map with default view (will be updated if geolocation succeeds)
         map = L.map('map').setView([39.8283, -98.5795], 4);
 
@@ -125,7 +130,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Load locations from Firestore
-        loadLocationsFromFirestore();
+        await loadLocationsFromFirestore();
+        lastLoadUserUid = currentUser ? currentUser.uid : null;
 
         // Event listeners
         document.getElementById('add-btn').addEventListener('click', toggleCreationMode);
