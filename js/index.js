@@ -23,59 +23,58 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedEditImage = null;
     let currentLocationImageUrl = null;
 
-    // Session Check: Redirect to login if not authenticated
+    // Session Check: track whether the user is authenticated
     let authCheckComplete = false;
+    let isAuthenticated = false;
+
     onAuthStateChanged(auth, async (user) => {
         if (!authCheckComplete) {
             authCheckComplete = true;
-            // Only redirect if user is not authenticated AND we're not already on login.html
-            if (!user && !window.location.pathname.includes('login.html')) {
-                window.location.href = './login.html';
-                return;
-            }
-            
-            if (!user) {
-                return;
+        }
+
+        currentUser = user || null;
+        isAuthenticated = Boolean(currentUser);
+
+        if (currentUser) {
+            // Load user profile from Firestore if authenticated
+            try {
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                if (userDoc.exists()) {
+                    currentUserData = userDoc.data();
+                } else {
+                    // Create user profile if it doesn't exist (safety check)
+                    console.log('User profile not found, creating default profile...');
+                    currentUserData = {
+                        displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
+                        email: currentUser.email || '',
+                        bio: '',
+                        createdAt: serverTimestamp(),
+                        lastLogin: serverTimestamp()
+                    };
+                    
+                    try {
+                        await setDoc(doc(db, 'users', currentUser.uid), currentUserData);
+                        console.log('Default user profile created successfully');
+                    } catch (createError) {
+                        console.error('Error creating default profile:', createError);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user profile:', error);
             }
         } else {
-            // If auth state changes after initial check, don't redirect
-            if (!user) {
-                return;
-            }
+            currentUserData = null;
         }
 
-        currentUser = user;
+        updateAuthUI();
 
-        // Load user profile from Firestore
-        try {
-            const userDoc = await getDoc(doc(db, 'users', user.uid));
-            if (userDoc.exists()) {
-                currentUserData = userDoc.data();
-            } else {
-                // Create user profile if it doesn't exist (safety check)
-                console.log('User profile not found, creating default profile...');
-                currentUserData = {
-                    displayName: user.displayName || user.email?.split('@')[0] || 'User',
-                    email: user.email || '',
-                    bio: '',
-                    createdAt: serverTimestamp(),
-                    lastLogin: serverTimestamp()
-                };
-                
-                try {
-                    await setDoc(doc(db, 'users', user.uid), currentUserData);
-                    console.log('Default user profile created successfully');
-                } catch (createError) {
-                    console.error('Error creating default profile:', createError);
-                }
-            }
-        } catch (error) {
-            console.error('Error loading user profile:', error);
+        if (markers) {
+            await loadLocationsFromFirestore();
         }
-
-        // Initialize map after authentication
-        initializeMap();
     });
+
+    // Initialize the public map immediately, before auth completes
+    initializeMap();
 
     function initializeMap() {
         // Initialize the map with default view (will be updated if geolocation succeeds)
@@ -131,6 +130,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('add-btn').addEventListener('click', toggleCreationMode);
         document.getElementById('search').addEventListener('input', handleSearch);
         document.getElementById('settings-btn').addEventListener('click', () => {
+            if (!currentUser) {
+                window.location.href = './login.html';
+                return;
+            }
             window.location.href = './settings.html';
         });
         document.getElementById('submit-location-btn').addEventListener('click', submitNewLocation);
@@ -138,7 +141,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('update-location-btn').addEventListener('click', updateLocation);
         document.getElementById('delete-location-btn').addEventListener('click', deleteLocation);
         document.getElementById('cancel-edit-btn').addEventListener('click', cancelEdit);
-        
+
+        updateAuthUI();
+
         // Image upload event listeners
         document.getElementById('new-image').addEventListener('change', handleNewImageSelect);
         document.getElementById('edit-image').addEventListener('change', handleEditImageSelect);
@@ -161,6 +166,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 showError('Offline: Cannot add new locations. Reload when online.');
             }
         });
+    }
+
+    function updateAuthUI() {
+        const addBtn = document.getElementById('add-btn');
+        const settingsBtn = document.getElementById('settings-btn');
+        const submitBtn = document.getElementById('submit-location-btn');
+        const updateBtn = document.getElementById('update-location-btn');
+        const deleteBtn = document.getElementById('delete-location-btn');
+
+        if (currentUser) {
+            addBtn.removeAttribute('disabled');
+            settingsBtn.removeAttribute('disabled');
+            submitBtn.removeAttribute('disabled');
+            updateBtn.removeAttribute('disabled');
+            deleteBtn.removeAttribute('disabled');
+        } else {
+            addBtn.removeAttribute('class');
+            addBtn.className = 'btn btn-secondary';
+            addBtn.removeAttribute('aria-pressed');
+            addBtn.removeAttribute('title');
+            addBtn.removeAttribute('style');
+            addBtn.removeAttribute('type');
+            addBtn.setAttribute('disabled', 'disabled');
+            settingsBtn.removeAttribute('disabled');
+            submitBtn.setAttribute('disabled', 'disabled');
+            updateBtn.setAttribute('disabled', 'disabled');
+            deleteBtn.setAttribute('disabled', 'disabled');
+        }
     }
 
     // Helper function to fetch user profile with caching
@@ -760,6 +793,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Toggle creation mode
     function toggleCreationMode() {
+        if (!currentUser) {
+            showError('Please log in to add locations.');
+            return;
+        }
+
         creationMode = !creationMode;
         const addBtn = document.getElementById('add-btn');
         addBtn.classList.toggle('active', creationMode);
@@ -815,6 +853,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Submit new location
     async function submitNewLocation() {
+        if (!currentUser) {
+            showError('Please log in to add locations.');
+            return;
+        }
+
         const title = document.getElementById('new-title').value.trim();
         const notes = document.getElementById('new-notes').value.trim();
         const address = document.getElementById('new-address').value.trim();
