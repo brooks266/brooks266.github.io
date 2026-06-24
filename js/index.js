@@ -168,6 +168,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Start the public map immediately when the page loads.
+    initializeMap();
+
     function updateAuthUI() {
         const addBtn = document.getElementById('add-btn');
         const settingsBtn = document.getElementById('settings-btn');
