@@ -24,6 +24,11 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentLocationImageUrl = null;
     let locationLoadCounter = 0;
     let lastLoadUserUid = null;
+    let authInitialized = false;
+    let resolveAuthReady;
+    const authReadyPromise = new Promise((resolve) => {
+        resolveAuthReady = resolve;
+    });
 
     onAuthStateChanged(auth, async (user) => {
         currentUser = user || null;
@@ -61,8 +66,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
         updateAuthUI();
 
+        const uid = currentUser ? currentUser.uid : null;
+        if (!authInitialized) {
+            authInitialized = true;
+            lastLoadUserUid = uid;
+            console.log(`[Auth Init] uid: ${uid}. Auth ready signaled for initial marker load.`);
+            resolveAuthReady();
+            return;
+        }
+
         if (markers) {
-            const uid = currentUser ? currentUser.uid : null;
             console.log(`[Auth Change] uid: ${uid}, lastLoadUserUid: ${lastLoadUserUid}, shouldReload: ${uid !== lastLoadUserUid}`);
             if (uid !== lastLoadUserUid) {
                 console.log(`[Auth Change] Reloading markers for user change...`);
@@ -123,10 +136,11 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Geolocation not supported by browser. Using default map center.');
         }
 
-        // Load locations from Firestore
-        console.log(`[initializeMap] Starting initial location load...`);
+        // Load locations from Firestore only after first auth state resolves
+        console.log(`[initializeMap] Waiting for auth readiness before initial location load...`);
+        await authReadyPromise;
+        console.log(`[initializeMap] Starting initial location load (guest access supported)...`);
         await loadLocationsFromFirestore();
-        lastLoadUserUid = currentUser ? currentUser.uid : null;
         console.log(`[initializeMap] Initial load complete, lastLoadUserUid: ${lastLoadUserUid}`);
 
         // Event listeners
