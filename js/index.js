@@ -1,8 +1,8 @@
 import { auth, db, storage, ref, uploadBytes, getDownloadURL, deleteObject,
-         onAuthStateChanged, signOut, collection, addDoc,
-         getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where,
+         onAuthStateChanged, collection, addDoc,
+         getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, query,
          orderBy, serverTimestamp } from './firebase-config.js';
-import { showLoading, showError, showSuccess, handleError } from './utils.js';
+import { showLoading, showError, showSuccess } from './utils.js';
 
 // User profile cache to avoid redundant fetches
 const userProfileCache = new Map();
@@ -25,17 +25,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let locationLoadCounter = 0;
     let lastLoadUserUid = null;
 
-    // Session Check: track whether the user is authenticated
-    let authCheckComplete = false;
-    let isAuthenticated = false;
-
     onAuthStateChanged(auth, async (user) => {
-        if (!authCheckComplete) {
-            authCheckComplete = true;
-        }
-
         currentUser = user || null;
-        isAuthenticated = Boolean(currentUser);
 
         if (currentUser) {
             // Load user profile from Firestore if authenticated
@@ -311,6 +302,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const userProfilePromises = userIds.map(userId => fetchUserProfile(userId));
             await Promise.all(userProfilePromises);
 
+            // Build O(1) lookup map for Firestore doc data by location ID
+            const locationDocDataMap = new Map(
+                querySnapshot.docs.map((docSnap) => [docSnap.id, docSnap.data()])
+            );
+
             // Second pass: create markers with cached user data
             let validMarkers = 0;
             const batchSize = 100; // Increased batch size since we're not waiting for user fetches
@@ -323,9 +319,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const userProfile = await fetchUserProfile(userId);
                 const username = userProfile.displayName;
 
-                // Get voting data from the original Firestore document
-                const locationDoc = querySnapshot.docs.find(doc => doc.id === locationId);
-                const locationDocData = locationDoc ? locationDoc.data() : {};
+                // Get voting data with O(1) lookup
+                const locationDocData = locationDocDataMap.get(locationId) || {};
                 const upvotes = locationDocData.upvotes || [];
                 const downvotes = locationDocData.downvotes || [];
 
