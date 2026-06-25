@@ -164,47 +164,54 @@
         const MESSAGE_TIMEOUT = 5000;
         const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
 
-    // Session Check
-    let authCheckComplete = false;
-    onAuthStateChanged(auth, async (user) => {
-        if (!authCheckComplete) {
-            authCheckComplete = true;
-            // Only redirect if user is not authenticated AND we're not already on login.html
-            if (!user && !window.location.pathname.includes('login.html')) {
-                window.location.href = './login.html';
-                return;
+        // Parse once for auth/profile mode decisions
+        const urlParams = new URLSearchParams(window.location.search);
+        viewingUserId = urlParams.get('userId');
+
+        // Session Check
+        let authCheckComplete = false;
+        onAuthStateChanged(auth, async (user) => {
+            if (!authCheckComplete) {
+                authCheckComplete = true;
             }
-            
+
+            // Guest mode handling
             if (!user) {
+                currentUser = null;
+
+                // Allow read-only public profile viewing when userId is provided
+                if (viewingUserId) {
+                    isOwnProfile = false;
+                    document.title = 'User Profile - Interactive Map App';
+                    await loadUserProfile(viewingUserId);
+                    await loadUserStats(viewingUserId);
+                    updateUIForProfileMode();
+                    return;
+                }
+
+                // Protect bare settings page (own profile management)
+                if (!window.location.pathname.includes('login.html')) {
+                    window.location.href = './login.html';
+                }
                 return;
             }
-        } else {
-            // If auth state changes after initial check, don't redirect
-            if (!user) {
-                return;
-            }
-        }
 
             currentUser = user;
-            
-            // Check if viewing another user's profile
-            const urlParams = new URLSearchParams(window.location.search);
-            viewingUserId = urlParams.get('userId');
-            
+
             if (viewingUserId && viewingUserId !== currentUser.uid) {
                 // Viewing another user's profile
                 isOwnProfile = false;
                 document.title = 'User Profile - Interactive Map App';
                 await loadUserProfile(viewingUserId);
+                await loadUserStats(viewingUserId);
             } else {
-                // Viewing own profile
+                // Viewing own profile (including ?userId=<ownUid>)
                 isOwnProfile = true;
                 document.title = 'Profile & Settings - Interactive Map App';
                 await loadUserProfile(currentUser.uid);
+                await loadUserStats(currentUser.uid);
             }
-            
-            await loadUserStats(viewingUserId || currentUser.uid);
-            
+
             // Update UI based on profile ownership
             updateUIForProfileMode();
         });
@@ -217,20 +224,24 @@
             const statsTitle = document.getElementById('stats-title');
             const backBtn = document.getElementById('back-btn');
             const changePictureBtn = document.getElementById('change-picture-btn');
+            const pictureUploadSection = document.getElementById('picture-upload-section');
             
-            if (isOwnProfile) {
+            if (isOwnProfile && currentUser) {
                 // Show editable form
                 profileForm.style.display = 'block';
                 profileReadonly.style.display = 'none';
                 logoutSection.style.display = 'block';
+                pictureUploadSection.style.display = 'block';
                 statsTitle.textContent = 'Your Statistics';
                 backBtn.textContent = '← Back to Map';
                 changePictureBtn.style.display = 'flex';
             } else {
-                // Show read-only view
+                // Show read-only view (other user or guest mode)
                 profileForm.style.display = 'none';
                 profileReadonly.style.display = 'block';
                 logoutSection.style.display = 'none';
+                pictureUploadSection.style.display = 'none';
+                pictureUploadSection.classList.remove('active');
                 statsTitle.textContent = 'User Statistics';
                 backBtn.textContent = '← Back';
                 changePictureBtn.style.display = 'none';
@@ -425,6 +436,8 @@
 
         // Profile Picture Upload Handlers
         document.getElementById('change-picture-btn').addEventListener('click', function() {
+            if (!isOwnProfile || !currentUser) return;
+
             const uploadSection = document.getElementById('picture-upload-section');
             const verificationWarning = document.getElementById('email-verification-warning');
             
@@ -471,6 +484,8 @@
         });
 
         document.getElementById('upload-picture-btn').addEventListener('click', async function() {
+            if (!isOwnProfile || !currentUser) return;
+
             if (!selectedFile) {
                 showError('Please select an image first.');
                 return;
@@ -545,6 +560,8 @@
         });
 
         document.getElementById('remove-picture-btn').addEventListener('click', async function() {
+            if (!isOwnProfile || !currentUser) return;
+
             if (!confirm('Are you sure you want to remove your profile picture?')) {
                 return;
             }
@@ -582,6 +599,8 @@
 
         // Resend verification email
         window.resendVerification = async function() {
+            if (!currentUser) return;
+
             try {
                 await sendEmailVerification(currentUser);
                 showSuccess('Verification email sent! Please check your inbox.');
@@ -595,7 +614,7 @@
         document.getElementById('profile-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            if (!isOwnProfile) return;
+            if (!isOwnProfile || !currentUser) return;
             
             const displayName = document.getElementById('displayName').value.trim();
             const bio = document.getElementById('bio').value.trim();
@@ -640,7 +659,7 @@
 
         // Reset form (only for own profile)
         document.getElementById('reset-btn').addEventListener('click', function() {
-            if (!isOwnProfile) return;
+            if (!isOwnProfile || !currentUser) return;
             
             if (originalData) {
                 document.getElementById('displayName').value = originalData.displayName || '';
@@ -659,7 +678,7 @@
 
         // Logout (only for own profile)
         document.getElementById('logout-btn').addEventListener('click', async function() {
-            if (!isOwnProfile) return;
+            if (!isOwnProfile || !currentUser) return;
             
             if (confirm('Are you sure you want to logout?')) {
                 try {
